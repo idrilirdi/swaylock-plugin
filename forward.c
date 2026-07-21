@@ -1241,6 +1241,67 @@ void bind_viewporter(struct wl_client *client, void *data,
 	wl_resource_set_implementation(resource, &viewporter_impl, forward, NULL);
 }
 
+/* Minimal wl_subcompositor. Some toolkits (foot; smithay-client-toolkit, as
+ * used by alacritty) require wl_subcompositor to be present at startup even
+ * when the program renders its content as a single top-level surface. Plugin
+ * child surfaces are never given a lock-surface role, so their commits are
+ * already ignored by nested_surface_commit(); accepting subsurface creation
+ * therefore lets such programs start and draw their main surface, without
+ * compositing the (typically decorative/hidden) subsurface content. */
+static void nested_subsurface_set_position(struct wl_client *client,
+		struct wl_resource *resource, int32_t x, int32_t y) { }
+static void nested_subsurface_place_above(struct wl_client *client,
+		struct wl_resource *resource, struct wl_resource *sibling) { }
+static void nested_subsurface_place_below(struct wl_client *client,
+		struct wl_resource *resource, struct wl_resource *sibling) { }
+static void nested_subsurface_set_sync(struct wl_client *client,
+		struct wl_resource *resource) { }
+static void nested_subsurface_set_desync(struct wl_client *client,
+		struct wl_resource *resource) { }
+static void nested_subsurface_destroy(struct wl_client *client,
+		struct wl_resource *resource) {
+	wl_resource_destroy(resource);
+}
+static const struct wl_subsurface_interface subsurface_impl = {
+	.destroy = nested_subsurface_destroy,
+	.set_position = nested_subsurface_set_position,
+	.place_above = nested_subsurface_place_above,
+	.place_below = nested_subsurface_place_below,
+	.set_sync = nested_subsurface_set_sync,
+	.set_desync = nested_subsurface_set_desync,
+};
+
+static void nested_subcompositor_destroy(struct wl_client *client,
+		struct wl_resource *resource) {
+	wl_resource_destroy(resource);
+}
+static void nested_subcompositor_get_subsurface(struct wl_client *client,
+		struct wl_resource *resource, uint32_t id, struct wl_resource *surface,
+		struct wl_resource *parent) {
+	struct wl_resource *subsurface = wl_resource_create(client,
+		&wl_subsurface_interface, wl_resource_get_version(resource), id);
+	if (subsurface == NULL) {
+		wl_client_post_no_memory(client);
+		return;
+	}
+	wl_resource_set_implementation(subsurface, &subsurface_impl, NULL, NULL);
+}
+static const struct wl_subcompositor_interface subcompositor_impl = {
+	.destroy = nested_subcompositor_destroy,
+	.get_subsurface = nested_subcompositor_get_subsurface,
+};
+
+void bind_wl_subcompositor(struct wl_client *client, void *data,
+		uint32_t version, uint32_t id) {
+	struct wl_resource *resource =
+		wl_resource_create(client, &wl_subcompositor_interface, version, id);
+	if (resource == NULL) {
+		wl_client_post_no_memory(client);
+		return;
+	}
+	wl_resource_set_implementation(resource, &subcompositor_impl, NULL, NULL);
+}
+
 static void fractional_scale_handle_resource_destroy(struct wl_resource *resource) {
 	assert(wl_resource_instance_of(resource, &wp_fractional_scale_v1_interface, &fractional_scale_impl));
 	struct forward_surface *fwd_surface = wl_resource_get_user_data(resource);

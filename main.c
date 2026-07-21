@@ -2493,6 +2493,8 @@ int main(int argc, char **argv) {
 	// Also TODO: forwarding linux-dmabuf and (only the device part) of wl-drm
 	state.server.compositor = wl_global_create(state.server.display,
 		&wl_compositor_interface, 4, &state.forward, bind_wl_compositor);
+	state.server.subcompositor = wl_global_create(state.server.display,
+		&wl_subcompositor_interface, 1, &state.forward, bind_wl_subcompositor);
 	state.server.shm = wl_global_create(state.server.display,
 		&wl_shm_interface, 1, &state.forward, bind_wl_shm);
 	if (state.forward.drm) {
