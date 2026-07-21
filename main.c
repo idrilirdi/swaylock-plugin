@@ -2495,6 +2495,8 @@ int main(int argc, char **argv) {
 		&wl_compositor_interface, 4, &state.forward, bind_wl_compositor);
 	state.server.subcompositor = wl_global_create(state.server.display,
 		&wl_subcompositor_interface, 1, &state.forward, bind_wl_subcompositor);
+	state.server.seat = wl_global_create(state.server.display,
+		&wl_seat_interface, 7, &state.forward, bind_wl_seat);
 	state.server.shm = wl_global_create(state.server.display,
 		&wl_shm_interface, 1, &state.forward, bind_wl_shm);
 	if (state.forward.drm) {

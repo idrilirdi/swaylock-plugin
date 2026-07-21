@@ -119,6 +119,7 @@ struct swaylock_bg_server {
 	struct wl_global *wlr_layer_shell;
 	struct wl_global *compositor;
 	struct wl_global *subcompositor;
+	struct wl_global *seat;
 	struct wl_global *shm;
 	struct wl_global *xdg_output_manager;
 	struct wl_global *zwp_linux_dmabuf;
@@ -555,6 +556,7 @@ struct swaylock_surface {
  */
 void bind_wl_compositor(struct wl_client *client, void *data, uint32_t version, uint32_t id);
 void bind_wl_subcompositor(struct wl_client *client, void *data, uint32_t version, uint32_t id);
+void bind_wl_seat(struct wl_client *client, void *data, uint32_t version, uint32_t id);
 void bind_wl_shm(struct wl_client *client, void *data, uint32_t version, uint32_t id);
 void bind_linux_dmabuf(struct wl_client *client, void *data, uint32_t version, uint32_t id);
 void bind_drm(struct wl_client *client, void *data, uint32_t version, uint32_t id);
